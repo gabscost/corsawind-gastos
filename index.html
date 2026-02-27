@@ -131,14 +131,12 @@
     margin: 0 auto;
   }
   @media (max-width: 800px) {
-    .main { grid-template-columns: 1fr; padding: 12px; gap: 16px; }
     .stats-bar { padding: 0 12px; }
     header { padding: 0 14px; }
     header h1 { font-size: 20px; }
     .logo-plate { font-size: 11px; padding: 3px 8px; }
-    .form-card { position: static; }
-    .stat { padding: 12px 16px; min-width: 120px; }
-    .stat-value { font-size: 18px; }
+    .stat { padding: 12px 16px; min-width: 110px; }
+    .stat-value { font-size: 17px; }
     .field-row { grid-template-columns: 1fr 1fr; }
     .list-header { flex-direction: column; align-items: flex-start; gap: 10px; }
     .gasto-item { padding: 12px 14px; gap: 10px; }
@@ -146,6 +144,39 @@
     .cat-icon { width: 36px; height: 36px; font-size: 15px; }
     .form-body { padding: 16px; }
     .list-header { padding: 14px 16px; }
+
+    /* Mobile: formulário e histórico viram sub-abas */
+    .main {
+      display: block;
+      padding: 0;
+    }
+    .mobile-subtabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-subtab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mobile-subtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .mobile-panel { display: none; padding: 12px; }
+    .mobile-panel.active { display: block; }
+    .form-card { position: static; border-radius: 12px; }
+    .list-card { border-radius: 12px; }
+  }
+  @media (min-width: 801px) {
+    .mobile-subtabs { display: none; }
+    .mobile-panel { display: contents; }
+    .main { display: grid; grid-template-columns: 360px 1fr; gap: 24px; padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+    .form-card { position: sticky; top: 94px; }
   }
 
   /* FORM CARD */
@@ -559,7 +590,13 @@
 <!-- PAGE: GASTOS -->
 <div class="page active" id="page-gastos">
 <div class="main">
-  <!-- FORM -->
+  <!-- MOBILE SUB-TABS (only shown on mobile) -->
+  <div class="mobile-subtabs">
+    <div class="mobile-subtab active" onclick="showSubTab('adicionar', this)">➕ Adicionar</div>
+    <div class="mobile-subtab" onclick="showSubTab('historico', this)">📋 Histórico</div>
+  </div>
+  <!-- PANEL ADICIONAR -->
+  <div class="mobile-panel active" id="mpanel-adicionar">
   <div class="form-card">
     <div class="form-card-header">
       <span>➕</span>
@@ -620,6 +657,9 @@
     </div>
   </div>
 
+  </div><!-- end mobile-panel adicionar -->
+  <!-- PANEL HISTORICO -->
+  <div class="mobile-panel" id="mpanel-historico">
   <!-- LIST -->
   <div class="list-card">
     <div class="list-header">
@@ -997,6 +1037,15 @@
       }
     });
   }
+</script>
+
+<script>
+window.showSubTab = function(tab, btn) {
+  document.querySelectorAll('.mobile-subtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mobile-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mpanel-' + tab).classList.add('active');
+}
 </script>
 </body>
 </html>
