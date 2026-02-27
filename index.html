@@ -908,6 +908,9 @@
       setStatus(true);
       todosGastos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       window._todosGastos = todosGastos;
+      if (document.getElementById('page-dashboard').classList.contains('active')) {
+        window.renderDashboard();
+      }
       atualizarStats(todosGastos);
       renderizar(todosGastos);
     },
@@ -938,8 +941,8 @@
   let chartInstance = null;
 
   window.renderDashboard = function() {
-    if (!window._todosGastos) return;
-    const gastos = window._todosGastos;
+    const gastos = window._todosGastos || [];
+    const gastos_avail = gastos.length > 0;
     const anoSel = parseInt(document.getElementById('ano-select').value);
     const hoje = new Date();
     const mesAtual = hoje.getMonth();
