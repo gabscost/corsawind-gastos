@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Gastos-Besourinho</title>
+<title>Corsa Wind — Controle de Gastos</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -423,6 +423,58 @@
   .c-outros      { background: #f0f0f0; color: #7f8c8d; }
 
   select option { font-family: 'Nunito', sans-serif; }
+  /* PAYMENT FIELDS */
+  .pagamento-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .pag-btn {
+    flex: 1;
+    padding: 9px 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    letter-spacing: 0.2px;
+  }
+  .pag-btn:hover { border-color: var(--accent); color: var(--text); }
+  .pag-btn.selected {
+    background: var(--dark);
+    border-color: var(--dark);
+    color: white;
+  }
+  .pag-btn.selected.credito { background: #1a5276; border-color: #1a5276; }
+  .pag-btn.selected.debito  { background: #1e8449; border-color: #1e8449; }
+  .pag-btn.selected.pix     { background: #117a65; border-color: #117a65; }
+  .pag-btn.selected.dinheiro{ background: #6e2f0a; border-color: #6e2f0a; }
+
+  .parcelas-row {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    margin-top: 0;
+  }
+  .parcelas-row.visible {
+    max-height: 80px;
+    opacity: 1;
+    margin-top: 14px;
+  }
+  .parcela-info {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    min-height: 18px;
+    font-weight: 500;
+  }
+  .parcela-info span { color: var(--accent); font-weight: 700; }
+
 
   /* NAV TABS */
   .nav-tabs {
@@ -553,7 +605,7 @@
 
 <header>
   <div class="header-left">
-    <div class="logo-plate">CHA</div>
+    <div class="logo-plate">MG·4321</div>
     <h1>CORSA <span>WIND</span></h1>
   </div>
   <div class="header-status">
@@ -625,7 +677,7 @@
       <div class="field-row">
         <div class="field">
           <label>Valor (R$)</label>
-          <input id="f-val" type="number" placeholder="0,00" step="0.01" min="0">
+          <input id="f-val" type="number" placeholder="0,00" step="0.01" min="0" oninput="calcParcela()">
         </div>
         <div class="field">
           <label>KM Atual</label>
@@ -645,6 +697,28 @@
       <div class="field">
         <label>Oficina / Local</label>
         <input id="f-local" type="text" placeholder="ex: Auto Peças Silva">
+      </div>
+      <div class="field">
+        <label>Forma de Pagamento</label>
+        <div class="pagamento-btns">
+          <button type="button" class="pag-btn credito" onclick="selecionarPag('credito', this)">💳 Crédito</button>
+          <button type="button" class="pag-btn debito"  onclick="selecionarPag('debito', this)">💳 Débito</button>
+          <button type="button" class="pag-btn pix"     onclick="selecionarPag('pix', this)">⚡ Pix</button>
+          <button type="button" class="pag-btn dinheiro" onclick="selecionarPag('dinheiro', this)">💵 Dinheiro</button>
+        </div>
+        <div class="parcelas-row" id="parcelas-row">
+          <div class="field-row">
+            <div class="field" style="margin-bottom:0">
+              <label>Nº de Parcelas</label>
+              <input id="f-parcelas" type="number" placeholder="ex: 10" min="1" max="60" oninput="calcParcela()">
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label>Valor da Parcela</label>
+              <input id="f-vlr-parcela" type="text" placeholder="R$ 0,00" readonly style="background:#f0ede8;cursor:default">
+            </div>
+          </div>
+          <div class="parcela-info" id="parcela-info"></div>
+        </div>
       </div>
       <div class="field">
         <label>Observações</label>
@@ -828,12 +902,47 @@
               <span>📅 ${dataFmt}</span>
               ${g.km ? `<span>🛣️ ${Number(g.km).toLocaleString('pt-BR')} km</span>` : ''}
               ${g.local ? `<span>📍 ${g.local}</span>` : ''}
+              ${g.pagamento ? `<span>${g.pagamento==='credito'?'💳 Crédito':g.pagamento==='debito'?'💳 Débito':g.pagamento==='pix'?'⚡ Pix':'💵 Dinheiro'}${g.parcelas>1?' '+g.parcelas+'x':''}</span>` : ''}
             </div>
           </div>
           <div class="gasto-val">${fmt(g.valor)}</div>
           <button class="del-btn" onclick="window.deletar('${g.id}')" title="Remover">✕</button>
         </div>`;
     }).join('');
+  }
+
+
+  // PAGAMENTO
+  let pagamentoSelecionado = '';
+
+  window.selecionarPag = function(tipo, btn) {
+    document.querySelectorAll('.pag-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    pagamentoSelecionado = tipo;
+    const row = document.getElementById('parcelas-row');
+    if (tipo === 'credito') {
+      row.classList.add('visible');
+    } else {
+      row.classList.remove('visible');
+      document.getElementById('f-parcelas').value = '';
+      document.getElementById('f-vlr-parcela').value = '';
+      document.getElementById('parcela-info').innerHTML = '';
+    }
+  }
+
+  window.calcParcela = function() {
+    const val = parseFloat(document.getElementById('f-val').value) || 0;
+    const n   = parseInt(document.getElementById('f-parcelas').value) || 0;
+    const info = document.getElementById('parcela-info');
+    const vlrInput = document.getElementById('f-vlr-parcela');
+    if (val > 0 && n > 0) {
+      const vlrParc = val / n;
+      vlrInput.value = 'R$ ' + vlrParc.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+      info.innerHTML = '<span>' + n + 'x</span> de <span>R$ ' + vlrParc.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</span> = total <span>R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</span>';
+    } else {
+      vlrInput.value = '';
+      info.innerHTML = '';
+    }
   }
 
   // FILTRO
@@ -867,6 +976,8 @@
         data:      document.getElementById('f-data').value,
         local:     document.getElementById('f-local').value.trim(),
         obs:       document.getElementById('f-obs').value.trim(),
+        pagamento: pagamentoSelecionado || '',
+        parcelas:  pagamentoSelecionado === 'credito' ? (parseInt(document.getElementById('f-parcelas').value) || 1) : 1,
         criadoEm:  serverTimestamp()
       });
 
@@ -877,6 +988,12 @@
       document.getElementById('f-km').value   = '';
       document.getElementById('f-local').value = '';
       document.getElementById('f-obs').value  = '';
+      pagamentoSelecionado = '';
+      document.querySelectorAll('.pag-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('parcelas-row').classList.remove('visible');
+      document.getElementById('f-parcelas').value = '';
+      document.getElementById('f-vlr-parcela').value = '';
+      document.getElementById('parcela-info').innerHTML = '';
 
       toast('✅ Gasto salvo no Firebase!');
     } catch(e) {
