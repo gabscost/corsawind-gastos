@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corsa Wind — Controle de Gastos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ee;
+    --surface: #ffffff;
+    --card: #faf8f5;
+    --border: #e8e2d9;
+    --accent: #c0392b;
+    --accent2: #e74c3c;
+    --dark: #1a1208;
+    --text: #2c2416;
+    --muted: #8a7d6b;
+    --green: #27ae60;
+    --yellow: #f39c12;
+    --shadow: 0 2px 20px rgba(26,18,8,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--dark);
+    padding: 0 32px;
+    display: flex;
+    align-items: stretch;
+    height: 70px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+  }
+  .logo-plate {
+    background: var(--accent);
+    color: white;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: white;
+    letter-spacing: 2px;
+  }
+  header h1 span { color: var(--accent2); }
+  .header-status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #888;
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #555;
+    transition: background 0.3s;
+  }
+  .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.loading { background: var(--yellow); animation: blink 0.8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .stat {
+    padding: 16px 28px;
+    border-right: 1px solid var(--border);
+    min-width: 150px;
+    flex-shrink: 0;
+  }
+  .stat:first-child { padding-left: 0; }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: var(--text);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .stat-value.red { color: var(--accent); }
+  .stat-value.green { color: var(--green); }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    padding: 24px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 800px) {
+    .main { grid-template-columns: 1fr; padding: 16px; }
+    .stats-bar { padding: 0 16px; }
+    header { padding: 0 16px; }
+  }
+
+  /* FORM CARD */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    height: fit-content;
+    position: sticky;
+    top: 94px;
+  }
+  .form-card-header {
+    background: var(--dark);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .form-card-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: white;
+    letter-spacing: 1.5px;
+  }
+  .form-body { padding: 20px 24px 24px; }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 500;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+  }
+  .field textarea { resize: vertical; min-height: 70px; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn-save {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .btn-save:hover { background: #a93226; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(192,57,43,0.3); }
+  .btn-save:active { transform: translateY(0); }
+  .btn-save:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* LIST CARD */
+  .list-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .list-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .list-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: 1.5px;
+  }
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* ITEMS */
+  .gastos-list { min-height: 200px; }
+  .gasto-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    gap: 14px;
+    transition: background 0.15s;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .gasto-item:hover { background: var(--card); }
+  .gasto-item:last-child { border-bottom: none; }
+
+  .cat-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .gasto-info { flex: 1; min-width: 0; }
+  .gasto-desc {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gasto-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: flex;
+    gap: 8px;
+  }
+  .cat-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .gasto-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .del-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .del-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(192,57,43,0.05); }
+
+  /* EMPTY / LOADING */
+  .empty-state {
+    padding: 50px 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--dark);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--accent); }
+
+  /* CAT COLORS */
+  .c-combustivel { background: #fef3e8; color: #e67e22; }
+  .c-manutencao  { background: #e8f4fd; color: #2980b9; }
+  .c-revisao     { background: #f0e8fd; color: #8e44ad; }
+  .c-pneus       { background: #e8fdf0; color: #27ae60; }
+  .c-seguro      { background: #fdf8e8; color: #f39c12; }
+  .c-ipva        { background: #fde8e8; color: #c0392b; }
+  .c-multa       { background: #fde8e8; color: #c0392b; }
+  .c-lavagem     { background: #e8fdfc; color: #16a085; }
+  .c-pecas       { background: #f5e8fd; color: #7d3c98; }
+  .c-outros      { background: #f0f0f0; color: #7f8c8d; }
+
+  select option { font-family: 'Nunito', sans-serif; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-plate">MG·4321</div>
+    <h1>CORSA <span>WIND</span></h1>
+  </div>
+  <div class="header-status">
+    <div class="status-dot loading" id="status-dot"></div>
+    <span id="status-txt">conectando...</span>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-label">Total Gasto</div>
+    <div class="stat-value red" id="stat-total">R$ 0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Lançamentos</div>
+    <div class="stat-value" id="stat-count">0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Maior Gasto</div>
+    <div class="stat-value" id="stat-maior">R$ 0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Último Registro</div>
+    <div class="stat-value" id="stat-ultimo" style="font-size:16px;padding-top:4px">—</div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- FORM -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <span>➕</span>
+      <h2>Novo Gasto</h2>
+    </div>
+    <div class="form-body">
+      <div class="field">
+        <label>Categoria</label>
+        <select id="f-cat">
+          <option value="combustivel">⛽ Combustível</option>
+          <option value="manutencao">🔧 Manutenção</option>
+          <option value="revisao">📋 Revisão</option>
+          <option value="pneus">🛞 Pneus</option>
+          <option value="seguro">🛡️ Seguro</option>
+          <option value="ipva">📄 IPVA / Licenciamento</option>
+          <option value="multa">🚨 Multa</option>
+          <option value="lavagem">🧼 Lavagem / Estética</option>
+          <option value="pecas">⚙️ Peças</option>
+          <option value="outros">📦 Outros</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descrição</label>
+        <input id="f-desc" type="text" placeholder="ex: Troca de óleo 5W30">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input id="f-val" type="number" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>KM Atual</label>
+          <input id="f-km" type="number" placeholder="ex: 87500">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Mão de Obra (R$)</label>
+          <input id="f-mo" type="number" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input id="f-data" type="date">
+        </div>
+      </div>
+      <div class="field">
+        <label>Oficina / Local</label>
+        <input id="f-local" type="text" placeholder="ex: Auto Peças Silva">
+      </div>
+      <div class="field">
+        <label>Observações</label>
+        <textarea id="f-obs" placeholder="Detalhes adicionais..."></textarea>
+      </div>
+      <button class="btn-save" id="btn-salvar" onclick="salvarGasto()">
+        <span id="btn-icon">☁️</span>
+        <span id="btn-txt">Salvar no Firebase</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="list-card">
+    <div class="list-header">
+      <h2>Histórico de Gastos</h2>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="filtrar('combustivel', this)">⛽</button>
+        <button class="filter-btn" onclick="filtrar('manutencao', this)">🔧</button>
+        <button class="filter-btn" onclick="filtrar('pneus', this)">🛞</button>
+        <button class="filter-btn" onclick="filtrar('revisao', this)">📋</button>
+      </div>
+    </div>
+    <div class="gastos-list" id="gastos-list">
+      <div class="empty-state">
+        <div class="icon">🔄</div>
+        <p>Conectando ao Firebase...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, deleteDoc,
+    doc, onSnapshot, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // =============================================
+  // SUAS CONFIGURAÇÕES DO FIREBASE
+  // =============================================
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAhzc2OXw9Ny9dd6zfK4F_WItkZDdqjNyI",
+    authDomain:        "fir-8afa1.firebaseapp.com",
+    databaseURL:       "https://fir-8afa1-default-rtdb.firebaseio.com",
+    projectId:         "fir-8afa1",
+    storageBucket:     "fir-8afa1.firebasestorage.app",
+    messagingSenderId: "345070082028",
+    appId:             "1:345070082028:web:5fdd668d288997ea1b52c9"
+  };
+  // =============================================
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  let todosGastos = [];
+  let filtroAtivo = 'todos';
+
+  // Hoje como padrão no campo data
+  document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+
+  // STATUS
+  function setStatus(online) {
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-txt');
+    dot.className = 'status-dot ' + (online ? 'online' : '');
+    txt.textContent = online ? 'Firebase conectado' : 'sem conexão';
+  }
+
+  // TOAST
+  window.toast = function(msg, erro = false) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (erro ? ' error' : '');
+    setTimeout(() => el.className = 'toast', 3000);
+  }
+
+  // CATEGORIAS
+  const catInfo = {
+    combustivel: { label: 'Combustível',        icon: '⛽', cls: 'c-combustivel' },
+    manutencao:  { label: 'Manutenção',          icon: '🔧', cls: 'c-manutencao'  },
+    revisao:     { label: 'Revisão',             icon: '📋', cls: 'c-revisao'     },
+    pneus:       { label: 'Pneus',               icon: '🛞', cls: 'c-pneus'       },
+    seguro:      { label: 'Seguro',              icon: '🛡️', cls: 'c-seguro'      },
+    ipva:        { label: 'IPVA/Licenciamento',  icon: '📄', cls: 'c-ipva'        },
+    multa:       { label: 'Multa',               icon: '🚨', cls: 'c-multa'       },
+    lavagem:     { label: 'Lavagem',             icon: '🧼', cls: 'c-lavagem'     },
+    pecas:       { label: 'Peças',               icon: '⚙️', cls: 'c-pecas'       },
+    outros:      { label: 'Outros',              icon: '📦', cls: 'c-outros'      },
+  };
+
+  // FORMATAR MOEDA
+  function fmt(v) {
+    return 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  // ATUALIZAR STATS
+  function atualizarStats(gastos) {
+    const total  = gastos.reduce((s,g) => s + (g.valor||0), 0);
+    const maior  = gastos.length ? Math.max(...gastos.map(g => g.valor||0)) : 0;
+    const ultimo = gastos.length ? gastos[0] : null;
+
+    document.getElementById('stat-total').textContent  = fmt(total);
+    document.getElementById('stat-count').textContent  = gastos.length;
+    document.getElementById('stat-maior').textContent  = fmt(maior);
+    document.getElementById('stat-ultimo').textContent = ultimo
+      ? new Date(ultimo.data + 'T12:00:00').toLocaleDateString('pt-BR', {day:'2-digit',month:'short'})
+      : '—';
+  }
+
+  // RENDERIZAR LISTA
+  function renderizar(gastos) {
+    const list = document.getElementById('gastos-list');
+    const filtrados = filtroAtivo === 'todos' ? gastos : gastos.filter(g => g.categoria === filtroAtivo);
+
+    if (!filtrados.length) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="icon">🚗</div>
+        <p>${gastos.length ? 'Nenhum gasto nessa categoria.' : 'Nenhum gasto registrado ainda.<br>Adicione o primeiro!'}</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = filtrados.map(g => {
+      const info = catInfo[g.categoria] || catInfo.outros;
+      const dataFmt = g.data
+        ? new Date(g.data + 'T12:00:00').toLocaleDateString('pt-BR')
+        : '—';
+      return `
+        <div class="gasto-item">
+          <div class="cat-icon ${info.cls}">${info.icon}</div>
+          <div class="gasto-info">
+            <div class="gasto-desc">${g.descricao || info.label}</div>
+            <div class="gasto-meta">
+              <span class="cat-badge ${info.cls}">${info.label}</span>
+              <span>📅 ${dataFmt}</span>
+              ${g.km ? `<span>🛣️ ${Number(g.km).toLocaleString('pt-BR')} km</span>` : ''}
+              ${g.local ? `<span>📍 ${g.local}</span>` : ''}
+            </div>
+          </div>
+          <div class="gasto-val">${fmt(g.valor)}</div>
+          <button class="del-btn" onclick="window.deletar('${g.id}')" title="Remover">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  // FILTRO
+  window.filtrar = function(cat, btn) {
+    filtroAtivo = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderizar(todosGastos);
+  }
+
+  // SALVAR
+  window.salvarGasto = async function() {
+    const val = parseFloat(document.getElementById('f-val').value);
+    const desc = document.getElementById('f-desc').value.trim();
+    const cat  = document.getElementById('f-cat').value;
+
+    if (!val || val <= 0) { toast('⚠️ Informe um valor válido!', true); return; }
+
+    const btn = document.getElementById('btn-salvar');
+    btn.disabled = true;
+    document.getElementById('btn-txt').textContent = 'Salvando...';
+    document.getElementById('btn-icon').textContent = '⏳';
+
+    try {
+      await addDoc(collection(db, 'gastos'), {
+        categoria: cat,
+        descricao: desc || catInfo[cat]?.label || 'Gasto',
+        valor:     val,
+        mo:        parseFloat(document.getElementById('f-mo').value) || 0,
+        km:        document.getElementById('f-km').value || '',
+        data:      document.getElementById('f-data').value,
+        local:     document.getElementById('f-local').value.trim(),
+        obs:       document.getElementById('f-obs').value.trim(),
+        criadoEm:  serverTimestamp()
+      });
+
+      // Limpar form
+      document.getElementById('f-desc').value = '';
+      document.getElementById('f-val').value  = '';
+      document.getElementById('f-mo').value   = '';
+      document.getElementById('f-km').value   = '';
+      document.getElementById('f-local').value = '';
+      document.getElementById('f-obs').value  = '';
+
+      toast('✅ Gasto salvo no Firebase!');
+    } catch(e) {
+      toast('❌ Erro ao salvar: ' + e.message, true);
+      console.error(e);
+    }
+
+    btn.disabled = false;
+    document.getElementById('btn-txt').textContent = 'Salvar no Firebase';
+    document.getElementById('btn-icon').textContent = '☁️';
+  }
+
+  // DELETAR
+  window.deletar = async function(id) {
+    if (!confirm('Remover esse gasto?')) return;
+    try {
+      await deleteDoc(doc(db, 'gastos', id));
+      toast('🗑️ Gasto removido');
+    } catch(e) {
+      toast('❌ Erro ao remover', true);
+    }
+  }
+
+  // LISTENER EM TEMPO REAL
+  const q = query(collection(db, 'gastos'), orderBy('criadoEm', 'desc'));
+  onSnapshot(q,
+    (snapshot) => {
+      setStatus(true);
+      todosGastos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      atualizarStats(todosGastos);
+      renderizar(todosGastos);
+    },
+    (err) => {
+      setStatus(false);
+      console.error(err);
+      document.getElementById('gastos-list').innerHTML = `
+        <div class="empty-state">
+          <div class="icon">⚠️</div>
+          <p>Erro ao conectar ao Firebase.<br><small>${err.message}</small></p>
+        </div>`;
+    }
+  );
+</script>
+</body>
+</html>
